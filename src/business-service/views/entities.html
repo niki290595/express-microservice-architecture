@@ -1,0 +1,168 @@
+<div>
+  <table class="table">
+    <tbody id="entities-body"></tbody>
+  </table>
+</div>
+
+<script>
+  const MAX_ENTITY_COUNT = 20;
+  let entityCollection = [];
+
+  function loadEntityCollection() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/entity", true);
+    xhr.onload = function (e) {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200) {
+          const entities = JSON.parse(xhr.response);
+          entities.forEach((e) => updateEntityView(e));
+          updateSummaryView(entities);
+        } else {
+          console.error(xhr.statusText);
+        }
+      }
+    };
+    xhr.onerror = function (e) {
+      console.error(xhr.statusText);
+    };
+    xhr.send(null);
+  }
+  function updateEntityView(e) {
+    let entityView = document.getElementById(`e-${e.ID}`);
+
+    if (!entityView) {
+      entityView = document.createElement("tr");
+      entityView.setAttribute("id", `e-${e.ID}`);
+      document
+        .getElementById("entities-body")
+        .insertBefore(entityView, document.getElementById(`summary`));
+    }
+
+    let html = `<td>${e.ID}</td>`;
+    for (let i = 1; i <= MAX_ENTITY_COUNT; i++) {
+      const p = e[`p${i}`];
+      html += `<td class='param-value'>${p ? p.toFixed(4) : ""}</td>`;
+    }
+
+    entityView.innerHTML = html;
+    setEntityParamsColor();
+  }
+  function setEntityParamsColor() {
+    const valTds = document.getElementsByClassName("param-value");
+
+    for (let valTd of valTds) {
+      const value = Number(valTd.innerText);
+      console.log(value);
+      if (value < 0) {
+        valTd.setAttribute(
+          "style",
+          `background-color: rgba(255, 140, 0, ${Math.abs(value)})`
+        );
+      } else if (value == 0) {
+        valTd.setAttribute("style", `background-color: rgb(255, 255, 255)`);
+      } else {
+        valTd.setAttribute(
+          "style",
+          `background-color: rgba(0, 0, 0, ${Math.abs(value)}); color: red;`
+        );
+      }
+    }
+  }
+  function buildSummaryView() {
+    let summaryView = document.getElementById(`summary`);
+
+    if (!summaryView) {
+      summaryView = document.createElement("tr");
+      summaryView.setAttribute("id", `summary`);
+      document.getElementById("entities-body").appendChild(summaryView);
+    }
+
+    let html = `<td>ИТОГО:</td>`;
+    for (let i = 1; i <= MAX_ENTITY_COUNT; i++) {
+      html += `
+        <td>
+          <select id="agg-${i}" onchange="updateSummaryColView(${i})">
+            <option selected>Sum</option>
+            <option>Min</option>
+            <option>Max</option>
+            <option>Avg</option>
+          </select>
+          <div id="s-${i}"></div>
+        </td>`;
+    }
+
+    summaryView.innerHTML = html;
+  }
+  function updateSummaryView(entities) {
+    entityCollection = entities;
+
+    for (let i = 1; i <= MAX_ENTITY_COUNT; i++) {
+      updateSummaryColView(i);
+    }
+  }
+  function updateSummaryColView(col) {
+    const agg = document.getElementById(`agg-${col}`).value;
+
+    let res;
+    const vals = entityCollection.map((e) => e[`p${col}`]);
+    switch (agg) {
+      case "Sum":
+        res = vals.reduce((v1, v2) => v1 + v2);
+        break;
+      case "Min":
+        res = vals.reduce((v1, v2) => (v1 < v2 ? v1 : v2));
+        break;
+      case "Max":
+        res = vals.reduce((v1, v2) => (v1 > v2 ? v1 : v2));
+        break;
+      case "Avg":
+        res = vals.reduce((v1, v2) => v1 + v2) / vals.length;
+        break;
+    }
+
+    document.getElementById(`s-${col}`).innerText = res.toFixed(4);
+  }
+
+  function work() {
+    loadEntityCollection();
+    setTimeout(() => {
+      work();
+    }, 5000);
+  }
+
+  window.onload = function () {
+    buildSummaryView();
+    work();
+  };
+</script>
+
+<style>
+  table.table {
+    border: 1px solid #1c6ea4;
+    background-color: #f9f9f9;
+    width: 100%;
+    text-align: right;
+    border-collapse: collapse;
+  }
+  table.table td,
+  table.table th {
+    border: 1px solid #aaaaaa;
+    padding: 5px 4px;
+  }
+  table.table tbody td {
+    font-size: 13px;
+  }
+  table.table tfoot td {
+    font-size: 14px;
+  }
+  table.table tfoot .links {
+    text-align: right;
+  }
+  table.table tfoot .links a {
+    display: inline-block;
+    background: #1c6ea4;
+    color: #ffffff;
+    padding: 2px 8px;
+    border-radius: 5px;
+  }
+</style>

@@ -10,7 +10,16 @@ interface IUpdateEntityInput {
 }
 
 export class EntityController {
-  private entities: IEntity[] = [];
+  private entities: IEntity[] = [
+    {
+      ID: "O",
+      p1: -0.7842016959037545,
+      p2: 0.5629499928567179,
+      p3: -0.3970328283045399,
+      p4: -0.6510563701928587,
+      p5: 0.08803461003366575,
+    },
+  ];
 
   findAll(): IEntity[] {
     return this.entities;
