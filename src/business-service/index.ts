@@ -27,7 +27,6 @@ app.get("/entity", (req: Request, res: Response) => {
 });
 
 app.post("/", (req: Request, res: Response) => {
-  console.log(req.body);
   entityController.update({
     ...req.body.entity,
   });
