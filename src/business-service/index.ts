@@ -16,13 +16,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.post("/", (req: Request, res: Response) => {
+  console.log(req.body);
   entityController.update({
-    ID: req.body.ID,
-    p1: req.body.p1,
-    p2: req.body.p2,
-    p3: req.body.p3,
-    p4: req.body.p4,
-    p5: req.body.p5,
+    ...req.body.entity,
   });
   res.send();
 });
